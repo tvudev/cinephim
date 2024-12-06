@@ -291,3 +291,17 @@ export interface getRecommendGenres2Type {
   movieGenres: { id: number; name: string }[];
   tvGenres: { id: number; name: string }[];
 }
+
+export interface MovieBannerInfo {
+  title: string;
+  poster_path: string;
+  overview: string;
+  release_date: string;
+}
+
+export interface TVBannerInfo {
+  name: string;
+  poster_path: string;
+  overview: string;
+  first_air_date: string;
+}

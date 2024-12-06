@@ -10,15 +10,14 @@ const TVInfo: FC = () => {
   const { id } = useParams();
 
   const { data, isError, error } = useQuery<FilmInfo, Error>(
-    ["tvDetail", id],
-    () => getTVFullDetail(Number(id as string))
+    { queryKey: ['tvDetail', id], queryFn: () => getTVFullDetail(Number(id as string)) }
   );
 
   // if (isError) return <div>ERROR: {error.message}</div>;
   if (isError) return <Error />;
   // if (isLoading) return <div>Loading...</div>;
 
-  return <FilmDetail {...data} />;
+  return <FilmDetail {...(data || {})} />;
 };
 
 export default TVInfo;

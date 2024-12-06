@@ -25,7 +25,10 @@ const RecommendGenres: FC<RecommendGenresProps> = ({ currentTab }) => {
   const { isLoading, data, isError, error } = useQuery<
     getRecommendGenres2Type,
     Error
-  >(["genres"], getRecommendGenres2);
+  >({
+    queryKey: ['genres'],
+    queryFn: getRecommendGenres2
+  });
 
   if (isError) return <div>ERROR: {error.message}</div>;
 
@@ -34,9 +37,13 @@ const RecommendGenres: FC<RecommendGenresProps> = ({ currentTab }) => {
       <div className="mt-36 mb-20 mx-auto h-10 w-10 rounded-full border-[5px] border-dark-lighten border-t-transparent animate-spin"></div>
     );
 
-  //  as { id: number; name: string }[]
+  if (!data) return <div>No genres available</div>;
+
+  const movieGenres: { id: number; name: string }[] = data.movieGenres;
+  const tvGenres: { id: number; name: string }[] = data.tvGenres;
+
   const randomGenres = getRandomGenres(
-    currentTab === "movie" ? data.movieGenres : data.tvGenres
+    currentTab === "movie" ? movieGenres : tvGenres
   );
 
   return (

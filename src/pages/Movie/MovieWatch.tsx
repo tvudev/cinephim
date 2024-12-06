@@ -9,8 +9,7 @@ import Error from "../Error";
 const MovieWatch: FC = () => {
   const { id } = useParams();
   const { data, error } = useQuery<getWatchReturnedType, Error>(
-    ["watchMovie", id],
-    () => getWatchMovie(Number(id as string))
+    { queryKey: ['watchMovie', id], queryFn: () => getWatchMovie(Number(id as string)) }
   );
 
   // if (error) return <div>ERROR: {error.message}</div>;
@@ -18,7 +17,7 @@ const MovieWatch: FC = () => {
 
   // if (!data) return <div>Loading...</div>;
 
-  return <FilmWatch {...data} media_type="movie" />;
+  return <FilmWatch {...(data || {})} media_type="movie" />;
 };
 
 export default MovieWatch;

@@ -9,8 +9,7 @@ import Error from "../Error";
 const TVWatch: FC = () => {
   const { id } = useParams();
   const { data, error } = useQuery<getWatchReturnedType, Error>(
-    ["watchTV", id],
-    () => getWatchTV(Number(id as string))
+    { queryKey: ['watchTV', id], queryFn: () => getWatchTV(Number(id as string)) }
   );
 
   const [queryParams] = useSearchParams();
@@ -24,11 +23,11 @@ const TVWatch: FC = () => {
   // if (!data) return <div>Loading...</div>;
 
   const currentSeason = data?.detailSeasons?.find(
-    (season) => season.season_number === seasonId
+    (season: { season_number: number }) => season.season_number === seasonId
   );
 
   const currentEpisode = currentSeason?.episodes.find(
-    (episode) => episode.episode_number === episodeId
+    (episode: { episode_number: number }) => episode.episode_number === episodeId
   );
 
   // I check data is truthy because I want to show 404 only when invalid episode or season are accessed, NOT when data is fetching

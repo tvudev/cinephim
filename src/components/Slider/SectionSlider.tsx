@@ -1,5 +1,5 @@
 import { FC } from "react";
-import { Navigation } from "swiper";
+import { Navigation as SwiperNavigation } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Item } from "../../shared/types";
 import FilmItem from "../Common/FilmItem";
@@ -13,7 +13,7 @@ const SectionSlider: FC<SectionSliderProps> = ({ films }) => {
   return (
     <div className="relative">
       <Swiper
-        modules={[Navigation]}
+        modules={[SwiperNavigation]}
         navigation
         slidesPerView="auto"
         slidesPerGroupAuto

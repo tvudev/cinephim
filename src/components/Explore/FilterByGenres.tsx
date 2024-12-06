@@ -1,5 +1,5 @@
 import { useAutoAnimate } from "@formkit/auto-animate/react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, UseQueryOptions } from "@tanstack/react-query";
 import { FunctionComponent } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useCurrentParams } from "../../hooks/useCurrentParams";
@@ -14,10 +14,16 @@ const FilterByGenres: FunctionComponent<FilterByGenresProps> = ({
   currentTab,
 }) => {
   const [genres] = useAutoAnimate();
-  const { isLoading, data, isError, error } = useQuery<
+  const queryOptions: UseQueryOptions<
     getRecommendGenres2Type,
-    Error
-  >(["genres"], getRecommendGenres2);
+    Error,
+    getRecommendGenres2Type,
+    string[]
+  > = {
+    queryKey: ["genres"],
+    queryFn: getRecommendGenres2,
+  };
+  const { isLoading, data, isError, error } = useQuery(queryOptions);
 
   const [searchParam, setSearchParam] = useSearchParams();
 
@@ -42,6 +48,8 @@ const FilterByGenres: FunctionComponent<FilterByGenresProps> = ({
       <div className="mt-20 mb-20 mx-auto h-10 w-10 rounded-full border-[5px] border-dark-darken border-t-transparent animate-spin"></div>
     );
 
+  if (!data) return <div>No genres available</div>;
+
   const chooseGenre = (genreId: string) => {
     const existingGenres = searchParam.getAll("genre");
 
@@ -61,6 +69,9 @@ const FilterByGenres: FunctionComponent<FilterByGenresProps> = ({
     }
   };
 
+  const movieGenres: { id: number; name: string }[] = data.movieGenres;
+  const tvGenres: { id: number; name: string }[] = data.tvGenres;
+
   return (
     <ul
       // @ts-ignore
@@ -68,7 +79,7 @@ const FilterByGenres: FunctionComponent<FilterByGenresProps> = ({
       className="flex gap-3 flex-wrap max-h-[200px] overflow-y-auto"
     >
       {currentTab === "movie" &&
-        data.movieGenres.map((genre) => (
+        movieGenres.map((genre: { id: number; name: string }) => (
           <li key={genre.id}>
             <button
               onClick={() => chooseGenre(String(genre.id))}
@@ -82,7 +93,7 @@ const FilterByGenres: FunctionComponent<FilterByGenresProps> = ({
           </li>
         ))}
       {currentTab === "tv" &&
-        data.tvGenres.map((genre) => (
+        tvGenres.map((genre: { id: number; name: string }) => (
           <li key={genre.id}>
             <button
               onClick={() => chooseGenre(String(genre.id))}

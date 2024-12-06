@@ -1,6 +1,6 @@
 import { FC } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation, Autoplay } from "swiper";
+import { Navigation as SwiperNavigation, Autoplay } from "swiper/modules";
 import { Item } from "../../shared/types";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import { resizeImage } from "../../shared/utils";
@@ -9,6 +9,7 @@ import { Link } from "react-router-dom";
 import { BsFillPlayFill } from "react-icons/bs";
 import Skeleton from "../Common/Skeleton";
 import { useCurrentViewportView } from "../../hooks/useCurrentViewportView";
+
 interface BannerSliderProps {
   films: Item[] | undefined;
   dataDetail: {
@@ -31,7 +32,7 @@ const BannerSlider: FC<BannerSliderProps> = ({
         <Skeleton className="absolute top-0 left-0 w-full h-full rounded-lg" />
       ) : (
         <Swiper
-          modules={[Navigation, Autoplay]}
+          modules={[SwiperNavigation, Autoplay]}
           navigation
           autoplay={{ delay: 5000, disableOnInteraction: false }}
           slidesPerView={1}

@@ -16,8 +16,9 @@ import {
   getMovieBannerInfo,
   getTVBannerInfo,
 } from "../services/home";
-import { HomeFilms, Item } from "../shared/types";
+import { HomeFilms, Item, MovieBannerInfo, TVBannerInfo } from "../shared/types";
 import { useAppSelector } from "../store/hooks";
+
 const Home: FC = () => {
   const currentUser = useAppSelector((state) => state.auth.user);
   const [currentTab, setCurrentTab] = useState(
@@ -25,40 +26,20 @@ const Home: FC = () => {
   );
   const [isSidebarActive, setIsSidebarActive] = useState(false);
 
-  const {
-    data: dataMovie,
-    isLoading: isLoadingMovie,
-    isError: isErrorMovie,
-    error: errorMovie,
-  } = useQuery<HomeFilms, Error>(["home-movies"], getHomeMovies);
-
-  const {
-    data: dataMovieDetail,
-    isLoading: isLoadingMovieDetail,
-    isError: isErrorMovieDetail,
-    error: errorMovieDetail,
-  } = useQuery<any, Error>(
-    ["detailMovies", dataMovie?.Trending],
-    () => getMovieBannerInfo(dataMovie?.Trending as Item[]),
-    { enabled: !!dataMovie?.Trending }
+  const { data: dataMovie, isLoading: isLoadingMovie, isError: isErrorMovie, error: errorMovie } = useQuery<HomeFilms, Error>(
+    { queryKey: ['home-movies'], queryFn: getHomeMovies }
   );
 
-  const {
-    data: dataTV,
-    isLoading: isLoadingTV,
-    isError: isErrorTV,
-    error: errorTV,
-  } = useQuery<HomeFilms, Error>(["home-tvs"], getHomeTVs);
+  const { data: dataMovieDetail, isLoading: isLoadingMovieDetail, isError: isErrorMovieDetail, error: errorMovieDetail } = useQuery<MovieBannerInfo, Error>(
+    { queryKey: ['detailMovies', dataMovie?.Trending], queryFn: () => getMovieBannerInfo(dataMovie?.Trending as Item[]) }
+  );
 
-  const {
-    data: dataTVDetail,
-    isLoading: isLoadingTVDetail,
-    isError: isErrorTVDetail,
-    error: errorTVDetail,
-  } = useQuery<any, Error>(
-    ["detailTvs", dataTV?.Trending],
-    () => getTVBannerInfo(dataTV?.Trending as Item[]),
-    { enabled: !!dataTV?.Trending }
+  const { data: dataTV, isLoading: isLoadingTV, isError: isErrorTV, error: errorTV } = useQuery<HomeFilms, Error>(
+    { queryKey: ['home-tvs'], queryFn: getHomeTVs }
+  );
+
+  const { data: dataTVDetail, isLoading: isLoadingTVDetail, isError: isErrorTVDetail, error: errorTVDetail } = useQuery<TVBannerInfo, Error>(
+    { queryKey: ['detailTvs', dataTV?.Trending], queryFn: () => getTVBannerInfo(dataTV?.Trending as Item[]) }
   );
 
   if (isErrorMovie) return <p>ERROR: {errorMovie.message}</p>;

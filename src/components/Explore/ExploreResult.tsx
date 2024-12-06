@@ -2,72 +2,10 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { FunctionComponent } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { LazyLoadImage } from "react-lazy-load-image-component";
+
 import { getExploreMovie, getExploreTV } from "../../services/explore";
-import { ConfigType, ItemsPage } from "../../shared/types";
+import { ItemsPage, ConfigType } from "../../shared/types";
 import FilmItem from "../Common/FilmItem";
-import Skeleton from "../Common/Skeleton";
-
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
-interface ExploreMovieResultProps {
-  pages?: ItemsPage[];
-}
-
-const ExploreMovieResult: FunctionComponent<ExploreMovieResultProps> = ({
-  pages,
-}) => {
-  return (
-    <ul className="grid grid-cols-sm lg:grid-cols-lg gap-x-8 gap-y-10 pt-2">
-      {pages &&
-        pages.map((page) =>
-          page.results.map((item) => (
-            <li key={item.id}>
-              <FilmItem item={item} />
-            </li>
-          ))
-        )}
-      {!pages &&
-        [...new Array(15)].map((_, index) => (
-          <li key={index}>
-            <Skeleton className="h-0 pb-[160%]" />
-          </li>
-        ))}
-    </ul>
-  );
-};
-
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
-
-interface ExploreTVResultProps {
-  pages?: ItemsPage[];
-}
-
-const ExploreTVResult: FunctionComponent<ExploreTVResultProps> = ({
-  pages,
-}) => {
-  return (
-    <ul className="grid grid-cols-sm lg:grid-cols-lg gap-x-8 gap-y-10">
-      {pages &&
-        pages.map((page) =>
-          page.results.map((item) => (
-            <li key={item.id}>
-              <FilmItem item={item} />
-            </li>
-          ))
-        )}
-      {!pages &&
-        [...new Array(15)].map((_, index) => (
-          <li key={index}>
-            <Skeleton className="h-0 pb-[160%]" />
-          </li>
-        ))}
-    </ul>
-  );
-};
-
-////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////
 
 interface ExploreResultProps {
   currentTab: string;
@@ -78,78 +16,75 @@ const ExploreResult: FunctionComponent<ExploreResultProps> = ({
   currentTab,
   config,
 }) => {
-  const {
-    data: movies,
-    error: errorMovies,
-    fetchNextPage: fetchNextPageMovie,
-    hasNextPage: hasNextPageMovie,
-  } = useInfiniteQuery<ItemsPage, Error>(
-    ["explore-result-movie", config],
-    ({ pageParam = 1 }) => getExploreMovie(pageParam, config),
-    {
-      getNextPageParam: (lastPage) =>
-        lastPage.page + 1 <= lastPage.total_pages
-          ? lastPage.page + 1
-          : undefined,
-    }
-  );
+  const { data: movies, error: errorMovies, fetchNextPage: fetchNextPageMovie } = useInfiniteQuery({
+    queryKey: ['explore-result-movie', config],
+    queryFn: ({ pageParam = 1 }) => getExploreMovie(pageParam as number, config),
+    getNextPageParam: (lastPage: ItemsPage) => {
+      if (!lastPage.results.length) return undefined;
+      const nextPage = lastPage.page + 1;
+      return nextPage <= lastPage.total_pages ? nextPage : undefined;
+    },
+    initialPageParam: 1
+  });
 
-  const {
-    data: tvs,
-    error: errorTvs,
-    fetchNextPage: fetchNextPageTv,
-    hasNextPage: hasNextPageTv,
-  } = useInfiniteQuery<ItemsPage, Error>(
-    ["explore-result-tv", config],
-    ({ pageParam = 1, queryKey }) =>
-      getExploreTV(pageParam, queryKey[1] as { [key: string]: string }),
-    {
-      getNextPageParam: (lastPage) =>
-        lastPage.page + 1 <= lastPage.total_pages
-          ? lastPage.page + 1
-          : undefined,
-    }
-  );
+  const { data: tvs, error: errorTVs, fetchNextPage: fetchNextPageTv } = useInfiniteQuery({
+    queryKey: ['explore-result-tv', config],
+    queryFn: ({ pageParam = 1 }) => getExploreTV(pageParam as number, config),
+    getNextPageParam: (lastPage: ItemsPage) => {
+      if (!lastPage.results.length) return undefined;
+      const nextPage = lastPage.page + 1;
+      return nextPage <= lastPage.total_pages ? nextPage : undefined;
+    },
+    initialPageParam: 1
+  });
 
   if (errorMovies) return <div>ERROR: {errorMovies.message}</div>;
-  if (errorTvs) return <div>ERROR: {errorTvs.message}</div>;
-
-  // if (!movies) return <div>Loading...</div>;
-  // if (!tvs) return <div>Loading...</div>;
+  if (errorTVs) return <div>ERROR: {errorTVs.message}</div>;
 
   return (
     <>
       {currentTab === "movie" && (
         <InfiniteScroll
-          dataLength={movies?.pages.length || 0}
-          next={() => fetchNextPageMovie()}
-          hasMore={Boolean(hasNextPageMovie)}
+          dataLength={movies?.pages?.reduce((acc, page) => acc + page.results.length, 0) || 0}
+          next={fetchNextPageMovie}
+          hasMore={!!movies?.pages?.[movies.pages.length - 1]?.total_pages}
           loader={<div>Loading...</div>}
           endMessage={<div>No more results</div>}
         >
-          <ExploreMovieResult pages={movies?.pages} />
+          <div className="grid grid-cols-sm md:grid-cols-lg gap-x-8 gap-y-10">
+            {movies?.pages?.map(page => 
+              page.results.map(item => (
+                <FilmItem key={item.id} item={item} />
+              ))
+            )}
+          </div>
         </InfiniteScroll>
       )}
-
       {currentTab === "tv" && (
         <InfiniteScroll
-          dataLength={tvs?.pages.length || 0}
-          next={() => fetchNextPageTv()}
-          hasMore={Boolean(hasNextPageTv)}
+          dataLength={tvs?.pages?.reduce((acc, page) => acc + page.results.length, 0) || 0}
+          next={fetchNextPageTv}
+          hasMore={!!tvs?.pages?.[tvs.pages.length - 1]?.total_pages}
           loader={<div>Loading...</div>}
           endMessage={
             <div className="flex flex-col items-center mb-12">
               <LazyLoadImage
                 src="/error.png"
-                alt=""
+                alt="No more results"
                 effect="opacity"
-                className="w-[600px]"
+                className="w-[600px] object-cover"
               />
-              <p className="text-white text-3xl mt-5">There is no such films</p>
+              <p className="text-xl mt-5">No more results</p>
             </div>
           }
         >
-          <ExploreTVResult pages={tvs?.pages} />
+          <div className="grid grid-cols-sm md:grid-cols-lg gap-x-8 gap-y-10">
+            {tvs?.pages?.map(page => 
+              page.results.map(item => (
+                <FilmItem key={item.id} item={item} />
+              ))
+            )}
+          </div>
         </InfiniteScroll>
       )}
     </>
